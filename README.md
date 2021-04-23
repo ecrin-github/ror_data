@@ -15,5 +15,5 @@ b) It loads and reads the entire json file<br/>
 c) It deserialises the fle into an array of ror_org objects<br/>
 d) Each ror_org object is considered in turn, with the various data elements being restructured to match the target database records and then sent to the database for storage.<br/>
 e) Records in all tables retain the ROR id of their source organisation, but they also include an integer id added by the program.<br/>
-f) In some cases sequence numbers are added to repeating data elements, to aid in any subsequent deduplication.
-g) Geonames and NUTS location data is included in the database only when non null.
+f) In some cases sequence numbers are added to repeating data elements, to aid in any subsequent deduplication.<br/>
+g) Geonames and NUTS location data is included in the database only when non null.<br/>
