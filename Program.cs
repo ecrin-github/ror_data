@@ -26,9 +26,8 @@ namespace ror_data
             
             // Read in the json file, 
             // consists of an array of objects, each equivalent to the ror_org class.
-
-            string file_location = @"D:\OneDrive\ECRIN\MDR Metadata scheme\ROR data\ror 20210421.json";
-            string jsonString = File.ReadAllText(file_location);
+            
+            string jsonString = File.ReadAllText(db_layer.jsonPath);
 
             // Use the data model to read it as an array of serialised objects.
 

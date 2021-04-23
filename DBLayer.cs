@@ -11,6 +11,7 @@ namespace ror_data
     public class DataLayer
     {
         private string connString;
+        private string json_path;
 
         public DataLayer()
         {
@@ -23,12 +24,15 @@ namespace ror_data
             builder.Host = settings["host"];
             builder.Username = settings["user"];
             builder.Password = settings["password"];
-            builder.Database = "ror";
+            builder.Database = "context";
 
             connString = builder.ConnectionString;
+
+            json_path = settings["jsonpath"];
         }
 
         public string ConnString => connString;
+        public string jsonPath => json_path;
 
 
         public ulong StoreOrgs(PostgreSQLCopyHelper<ror_org_in_db> copyHelper, IEnumerable<ror_org_in_db> entities)
