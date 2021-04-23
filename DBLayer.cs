@@ -31,12 +31,21 @@ namespace ror_data
         public string ConnString => connString;
 
 
-        public ulong StoreOrg(PostgreSQLCopyHelper<ror_org_in_db> copyHelper, IEnumerable<ror_org_in_db> entities)
+        public ulong StoreOrgs(PostgreSQLCopyHelper<ror_org_in_db> copyHelper, IEnumerable<ror_org_in_db> entities)
         {
             using (var conn = new NpgsqlConnection(connString))
             {
                 conn.Open();
                 return copyHelper.SaveAll(conn, entities);
+            }
+        }
+
+
+        public void StoreOrg(ror_org_in_db org)
+        {
+            using (var conn = new NpgsqlConnection(connString))
+            {
+                conn.Insert<ror_org_in_db>(org);
             }
         }
 
@@ -91,6 +100,57 @@ namespace ror_data
 
 
         public ulong StoreExternalIds(PostgreSQLCopyHelper<exid_in_db> copyHelper, IEnumerable<exid_in_db> entities)
+        {
+            using (var conn = new NpgsqlConnection(connString))
+            {
+                conn.Open();
+                return copyHelper.SaveAll(conn, entities);
+            }
+        }
+
+
+        public ulong StoreIPAddresses(PostgreSQLCopyHelper<ip_address_in_db> copyHelper, IEnumerable<ip_address_in_db> entities)
+        {
+            using (var conn = new NpgsqlConnection(connString))
+            {
+                conn.Open();
+                return copyHelper.SaveAll(conn, entities);
+            }
+        }
+
+
+        public ulong StoreRelationships(PostgreSQLCopyHelper<relationship_in_db> copyHelper, IEnumerable<relationship_in_db> entities)
+        {
+            using (var conn = new NpgsqlConnection(connString))
+            {
+                conn.Open();
+                return copyHelper.SaveAll(conn, entities);
+            }
+        }
+
+
+        public ulong StoreAddresses(PostgreSQLCopyHelper<address_in_db> copyHelper, IEnumerable<address_in_db> entities)
+        {
+            using (var conn = new NpgsqlConnection(connString))
+            {
+                conn.Open();
+                return copyHelper.SaveAll(conn, entities);
+            }
+        }
+
+
+        public ulong StoreCityAdmins(PostgreSQLCopyHelper<city_admin_in_db> copyHelper, IEnumerable<city_admin_in_db> entities)
+        {
+            using (var conn = new NpgsqlConnection(connString))
+            {
+                conn.Open();
+                return copyHelper.SaveAll(conn, entities);
+            }
+        }
+
+
+
+        public ulong StoreCityNUTS(PostgreSQLCopyHelper<city_nuts_in_db> copyHelper, IEnumerable<city_nuts_in_db> entities)
         {
             using (var conn = new NpgsqlConnection(connString))
             {
