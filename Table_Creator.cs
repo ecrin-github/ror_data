@@ -45,6 +45,7 @@ namespace ror_data
                 CREATE TABLE ror.orgs (
                     id                     INT
                   , ror_id                 VARCHAR
+                  , language               VARCHAR
                   , name                   VARCHAR
                   , status                 VARCHAR
                   , established            INT
@@ -65,6 +66,7 @@ namespace ror_data
                     id                     INT
                   , ror_id                 VARCHAR
                   , seq_num                INT
+                  , language               VARCHAR
                   , alias                  VARCHAR
                 );
                 CREATE INDEX org_aliases_id ON ror.org_aliases(id);
@@ -80,6 +82,7 @@ namespace ror_data
                     id                     INT
                   , ror_id                 VARCHAR
                   , seq_num                INT
+                  , language               VARCHAR
                   , acronym                VARCHAR
                 );
                 CREATE INDEX org_acronyms_id ON ror.org_acronyms(id);
@@ -189,7 +192,7 @@ namespace ror_data
                   , lat                    FLOAT
                   , lng                    FLOAT
                   , geonames_country_id    INT
-                  , state                  VARCHAR
+                  , state                  VARCHAR 
                   , state_code             VARCHAR
                   , geonames_city_id       INT
                   , city                   VARCHAR

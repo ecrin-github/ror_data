@@ -24,7 +24,7 @@ namespace ror_data
             builder.Host = settings["host"];
             builder.Username = settings["user"];
             builder.Password = settings["password"];
-            builder.Database = "context";
+            builder.Database = settings["database"]; ;
 
             connString = builder.ConnectionString;
 
