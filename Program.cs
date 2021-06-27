@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.IO;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -57,7 +58,78 @@ namespace ror_data
                 org.wikipedia_url = ro.wikipedia_url;
                 org.country_name = ro.country.country_name;
                 org.country_code = ro.country.country_code;
-                db_layer.StoreOrg(org);
+
+                if (ro.name.Contains("(") && ro.name.EndsWith(")"))
+                {
+                    int start_bracket_pos = ro.name.IndexOf("(");
+                    string bracketed = ro.name
+                        .Substring(start_bracket_pos + 1, ro.name.Length - start_bracket_pos - 2)
+                        .Trim().ToLower();
+
+                    // ignore some non-country bracketed text
+                    if (bracketed != "ascr" && bracketed != "company"
+                        && bracketed != "duluth" && bracketed != "epa"
+                        && bracketed != "engrs." && bracketed != "Rybářství Litomyšl")
+                    {
+                        // do some corrections along the way
+
+                        if (bracketed == "brasil") { bracketed = "brazil"; }
+                        if (bracketed == "czech republic") { bracketed = "czechia"; }
+                        if (bracketed == "luxemburg") { bracketed = "luxembourg"; }
+                        if (bracketed == "south korean") { bracketed = "south korea"; }
+                        if (bracketed == "uk") { bracketed = "united kingdom"; }
+                        if (bracketed == "united kindgom") { bracketed = "united kingdom"; }
+                        if (bracketed == "usa") { bracketed = "united states"; }
+                        if (bracketed == "unitedstates") { bracketed = "united states"; }
+                        if (bracketed == "hongkong") { bracketed = "hong kong"; }
+                        if (bracketed == "berlin") { bracketed = "germany"; }
+                        if (bracketed.Contains("sweden"))
+                        {
+                            // lose some spurious (not visible in utf-8) characters
+                            bracketed = "sweden";
+                        }
+
+                        bracketed = Capitalise(bracketed);
+
+                        // may be 2 sets of brackets in the name...
+
+                        if (bracketed.Contains(")") && bracketed.Contains("("))
+                        {
+                            org.name_stem = ro.name.Substring(0, start_bracket_pos + 1) + Capitalise(bracketed.Substring(0, bracketed.IndexOf(")") + 1));
+                            org.bracketed_portion = Capitalise(bracketed.Substring(bracketed.IndexOf("(") + 1));
+                        }
+                        else
+                        {
+                            org.name_stem = ro.name.Substring(0, start_bracket_pos - 1);
+                            org.bracketed_portion = bracketed;
+                        }
+                    }
+                }
+
+
+                // Types
+                if (ro.types != null && ro.types.Length > 0)
+                {
+                    List<type_in_db> types = new List<type_in_db>();
+                    foreach (string s in ro.types)
+                    {
+                        types.Add(new type_in_db(n, rorid, s));
+                        switch(s)
+                        {
+                            case "Archive": org.is_archive = true; break;
+                            case "Company": org.is_company = true; break;
+                            case "Education": org.is_education = true; break;
+                            case "Facility": org.is_facility = true; break;
+                            case "Government": org.is_government = true; break;
+                            case "Healthcare": org.is_healthcare = true; break;
+                            case "Nonprofit": org.is_nonprofit = true; break;
+                            case "Other": org.is_other = true; break;
+                        }
+                            
+                    }
+
+                    db_layer.StoreTypes(ch.type_helper, types);
+                }
 
 
                 // Aliases
@@ -120,19 +192,6 @@ namespace ror_data
                 }
 
 
-                // Types
-                if (ro.types != null && ro.types.Length > 0)
-                {
-                    List<type_in_db> types = new List<type_in_db>();
-                    foreach (string s in ro.types)
-                    {
-                        types.Add(new type_in_db(n, rorid, s));
-                    }
-
-                    db_layer.StoreTypes(ch.type_helper, types);
-                }
-
-
                 // IP addresses
                 if (ro.ip_addresses != null && ro.ip_addresses.Length > 0)
                 {
@@ -165,20 +224,36 @@ namespace ror_data
                     List<address_in_db> addresses = new List<address_in_db>();
                     List<city_admin_in_db> city_admins = new List<city_admin_in_db>();
                     List<city_nuts_in_db> city_nuts = new List<city_nuts_in_db>();
-
-                    int add_id = 0;
+  
+                    int add_id = 0, gn_city_seq = 0;
                     foreach (address a in ro.addresses)
                     {
                         add_id++;
+                        if (add_id == 1)
+                        {
+                            org.country_gn_id = a.country_geonames_id;
+                        }
+
                         address_in_db adb = new address_in_db(n, rorid, add_id, a.lat, a.lng,
                              a.country_geonames_id, a.state, a.state_code, a.city,
                              a.postcode, a.line, a.primary);
-
+   
                         if (a.geonames_city != null)
                         {
                             geonames_city gc = a.geonames_city;
-                            adb.geonames_city_id = gc.id;
+                            gn_city_seq++;
 
+                            adb.geonames_city_id = gc.id;
+                            if (gn_city_seq == 1)
+                            {
+                                org.city_gn_id = gc.id;
+                                org.city = gc.city;
+                            }
+                            else
+                            {
+                                org.city += ", " +gc.city + "[" + gc.id.ToString() + "]";
+                            }
+                             
                             if (gc.geonames_admin1 != null)
                             {
                                 gadmin gca = gc.geonames_admin1;
@@ -251,6 +326,10 @@ namespace ror_data
                         db_layer.StoreCityNUTS(ch.city_nuts_helper, city_nuts);
                     }
                 }
+
+
+                // now org object can be stored in database
+                db_layer.StoreOrg(org);
 
 
                 //External Ids
@@ -460,6 +539,40 @@ namespace ror_data
 
                 }
             }
+        }
+
+
+        private static string Capitalise(string s)
+        {
+            string capped_s = "", new_s = "";
+            
+            if (s.Length < 4)
+            {
+                capped_s = s.ToUpper();
+            }
+            else if (s.Contains(" "))
+            {
+                string[] words = s.Split(" ");
+                foreach (string w in words)
+                {
+                    new_s += " " + w[0].ToString().ToUpper() + w.Substring(1);
+                }
+                capped_s = new_s.Substring(1);
+            }
+            else if (s.Contains("-"))
+            {
+                string[] words = s.Split("-");
+                foreach (string w in words)
+                {
+                    new_s += "-" + w[0].ToString().ToUpper() + w.Substring(1);
+                }
+                capped_s = new_s.Substring(1);
+            }
+            else
+            {
+                capped_s = s[0].ToString().ToUpper() + s.Substring(1);
+            }
+            return capped_s;
         }
     }
 }

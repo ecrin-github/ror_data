@@ -11,6 +11,7 @@ namespace ror_data
     {
         public string id { get; set; }
         public string name { get; set; }
+        public string bracketed_portion { get; set; }
         public string status { get; set; }
         public int? established { get; set; }
         public string email_address { get; set; }
@@ -137,12 +138,25 @@ namespace ror_data
         public int id { get; set; }
         public string ror_id { get; set; }
         public string name { get; set; }
+        public string name_stem { get; set; }
+        public string bracketed_portion { get; set; }
         public string status { get; set; }
         public int? established { get; set; }
         public string email_address { get; set; }
         public string wikipedia_url { get; set; }
-        public string country_name { get; set; }
+        public int? city_gn_id { get; set; }
+        public string city { get; set; }
+        public int? country_gn_id { get; set; }
         public string country_code { get; set; }
+        public string country_name { get; set; }
+        public bool is_company { get; set; }
+        public bool is_education { get; set; }
+        public bool is_government { get; set; }
+        public bool is_archive { get; set; }
+        public bool is_nonprofit { get; set; }
+        public bool is_healthcare { get; set; }
+        public bool is_facility { get; set; }
+        public bool is_other { get; set; }
     }
 
 

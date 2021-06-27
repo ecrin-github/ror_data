@@ -47,17 +47,31 @@ namespace ror_data
                   , ror_id                 VARCHAR
                   , language               VARCHAR
                   , name                   VARCHAR
+                  , name_stem              VARCHAR
+                  , bracketed_portion      VARCHAR
                   , status                 VARCHAR
                   , established            INT
-                  , country_name           VARCHAR
+                  , city_gn_id             INT
+                  , city                   VARCHAR
+                  , country_gn_id          INT
                   , country_code           VARCHAR
+                  , country_name           VARCHAR
                   , email_address          VARCHAR
                   , wikipedia_url          VARCHAR
+                  , is_company             BOOLEAN     DEFAULT false
+                  , is_education           BOOLEAN     DEFAULT false
+                  , is_government          BOOLEAN     DEFAULT false
+                  , is_archive             BOOLEAN     DEFAULT false
+                  , is_nonprofit           BOOLEAN     DEFAULT false
+                  , is_healthcare          BOOLEAN     DEFAULT false
+                  , is_facility            BOOLEAN     DEFAULT false
+                  , is_other               BOOLEAN     DEFAULT false
                 );
                 CREATE INDEX orgs_id ON ror.orgs(id);
                 CREATE INDEX orgs_ror_id ON ror.orgs(ror_id);";
             execute_sql(sql_string);
         }
+
 
         private void create_org_aliases()
         {
