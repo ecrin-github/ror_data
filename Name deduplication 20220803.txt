@@ -14,12 +14,12 @@ order by count(id) desc;
 
 -- Examine the duplicates in detail
 
-select *
+select dl.id, ror_id, count, seq_num, language, value
 from ror.dup_labels dl
 inner join ror.org_labels gl
 on dl.id = gl.id
 and dl.lowervalue = lower(gl.value)
-order by count desc, dl.id
+order by ror_id, seq_num
 
 -- In  general the duplicate labels have different language codes, but some of those language codes are wrong, or at least over enthusiastic. 
 -- The following statements eliminate the duplicate label record by removing the ones with either an inaccurate or redundant language code.
@@ -69,12 +69,12 @@ order by count(id) desc;
 
 -- inspect the result
 
-select *
+select da.id, ror_id, count, seq_num, language, alias
 from ror.dup_aliases da
 inner join ror.org_aliases ga
 on da.id = ga.id
 and da.lowervalue = lower(ga.alias)
-order by count desc, da.id;
+order by ror_id, seq_num
 
 -- delete the ones with the higher sequence number
 
@@ -89,7 +89,9 @@ using
 where a.id = maxdups.id
 and a.seq_num = maxdups.maxseq;
 
--- acronyms - 1 of them was duplicated for the same org
+-- 6 deleted
+
+-- acronyms - 2 of them was duplicated for the same org
 
 drop table if exists ror.dup_acronyms;
 create table ror.dup_acronyms as 
@@ -99,12 +101,12 @@ group by id, lower(acronym)
 having count(id) > 1
 order by count(id) desc; 
 
-select *
+select da.id, ror_id, count, seq_num, language, acronym
 from ror.dup_acronyms da
 inner join ror.org_acronyms ga
 on da.id = ga.id
 and da.lowervalue = lower(ga.acronym)
-order by count desc, da.id
+order by ror_id, seq_num
 
 -- delete the one with the higher sequence number
 
@@ -119,27 +121,40 @@ using
 where a.id = maxdups.id
 and a.seq_num = maxdups.maxseq;
 
+-- 2 deleted
+
 -- there are still duplicates between the tables
 
 -- some aliases are the same as the name given for the organisation
 -- and need to be deleted
+
+select g.id, g.ror_id, g.name, a.alias from ror.org_aliases a
+inner join ror.orgs g
+on a.id = g.id
+and lower(a.alias) = lower(g.name)
+order by g.ror_id
 
 delete from ror.org_aliases a
 using ror.orgs g
 where a.id = g.id
 and lower(a.alias) = lower(g.name);
 
--- 65 removed
+-- 67 removed
 
 -- some aliases are the same as the name given for one of the labels
 -- and need to be deleted
+select b.id, b.ror_id, b.value, a.alias from ror.org_aliases a
+inner join ror.org_labels b
+on a.id = b.id
+and lower(a.alias) = lower(b.value)
+order by b.ror_id
 
 delete from ror.org_aliases a
 using ror.org_labels b
 where a.id = b.id
 and lower(a.alias) = lower(b.value);
 
--- 359 removed
+-- 351 removed
 
 -- some labels may be the same as the organisation and need to be deleted
 -- before that their language information can be transferred to the organisation
@@ -150,29 +165,60 @@ FROM ror.org_labels b
 where b.id = g.id
 and lower(b.value) = lower(g.name);
 
+select g.id, g.ror_id, g.name, b.value from ror.org_labels b
+inner join ror.orgs g
+on b.id = g.id
+and lower(g.name) = lower(b.value)
+order by g.ror_id
+
 delete from ror.org_labels b
 using ror.orgs g
 where b.id = g.id
 and lower(b.value) = lower(g.name)
 
--- 97 deleted
+-- 93 deleted
 
 
 -- acronyms need to have names that appear elsewhere removed...
+select a.id, a.ror_id, a.acronym, b.alias from ror.org_acronyms a
+inner join ror.org_aliases b
+on a.id = b.id
+and lower(a.acronym) = lower(b.alias)
+order by a.ror_id
+
 delete from ror.org_acronyms a
 using ror.org_aliases b
 where a.id = b.id
 and lower(a.acronym) = lower(b.alias);
+
+-- 5 deleted
+
+select a.id, a.ror_id, a.acronym, b.value from ror.org_acronyms a
+inner join ror.org_labels b
+on a.id = b.id
+and lower(a.acronym) = lower(b.value)
+order by a.ror_id
 
 delete from ror.org_acronyms a
 using ror.org_labels b
 where a.id = b.id
 and lower(a.acronym) = lower(b.value);
 
+-- 2 deleted
+
+
+select a.id, a.ror_id, a.acronym, g.name from ror.org_acronyms a
+inner join ror.orgs g
+on a.id = g.id
+and lower(a.acronym) = lower(g.name)
+order by a.ror_id
+
 delete from ror.org_acronyms a
 using ror.orgs g
 where a.id = g.id
 and lower(a.acronym) = lower(g.name);
+
+-- 13 deleted
 
 
 -- combine names, aliases, acronyms, labels into one table
@@ -188,7 +234,7 @@ union
 select id, ror_id, language, acronym, '', 'acronyms', 4 from ror.org_acronyms
 order by id, source_id;
 
--- 192,205 records
+-- 197,168 records
 
 -- Check no duplicates
 
@@ -202,6 +248,5 @@ select id, name, count(id)
 from ror.all_names
 group by id, name 
 having  count(id) = 1
--- 192,205 records
-
+-- 197,168 records
 
