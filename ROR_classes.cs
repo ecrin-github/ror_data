@@ -22,13 +22,9 @@ namespace ror_data
 
         public string[] aliases { get; set; }
         public string[] acronyms { get; set; }
-        public string[] ip_addresses { get; set; }
-
-        public relationship[] relationships { get; set; }
-        public external_ids external_ids { get; set; }
         public label_object[] labels { get; set; }
 
-        public string[] links { get; set; }
+        public relationship[] relationships { get; set; }
         public string[] types { get; set; }
     }
 
@@ -94,32 +90,6 @@ namespace ror_data
         public string license { get; set; }
     }
 
-
-    public class external_ids
-    {
-        public external_ref FundRef { get; set; }
-        public external_ref OrgRef { get; set; }
-        public external_ref ISNI { get; set; }
-        public grid_ref GRID { get; set; }
-        public external_ref Wikidata { get; set; }
-        public external_ref UCAS { get; set; }
-        public external_ref HESA { get; set; }
-        public external_ref UKPRN { get; set; }
-    }
-
-
-    public class external_ref
-    {
-        public string[] all { get; set; }
-        public string preferred { get; set; }
-    }
-
-    public class grid_ref
-    {
-        public string all { get; set; }
-        public string preferred { get; set; }
-    }
-
     public class label_object
     {
         public string iso639 { get; set; }
@@ -137,9 +107,9 @@ namespace ror_data
         [ExplicitKey]
         public int id { get; set; }
         public string ror_id { get; set; }
+        public string ror_name { get; set; }
         public string name { get; set; }
-        public string name_stem { get; set; }
-        public string bracketed_portion { get; set; }
+        public string qualifier { get; set; }
         public string status { get; set; }
         public int? established { get; set; }
         public string email_address { get; set; }
@@ -194,23 +164,6 @@ namespace ror_data
     }
 
 
-    public class link_in_db
-    {
-        public int id { get; set; }
-        public string ror_id { get; set; }
-        public int seq_num { get; set; }
-        public string link { get; set; }
-
-        public link_in_db(int _n, string _ror_id, int _seq_num, string _link)
-        {
-            id = _n;
-            ror_id = _ror_id;
-            seq_num = _seq_num;
-            link = _link;
-        }
-    }
-
-
     public class type_in_db
     {
         public int id { get; set; }
@@ -225,22 +178,7 @@ namespace ror_data
         }
     }
 
-
-    public class ip_address_in_db
-    {
-        public int id { get; set; }
-        public string ror_id { get; set; }
-        public string ip_address { get; set; }
-
-        public ip_address_in_db(int _n, string _ror_id, string _ip_address)
-        {
-            id = _n;
-            ror_id = _ror_id;
-            ip_address = _ip_address;
-        }
-    }
-
-
+        
     public class label_in_db
     {
         public int id { get; set; }
@@ -375,23 +313,5 @@ namespace ror_data
             nuts_name = _nuts_name;
         }
     }
-      
 
-    public class exid_in_db
-    {
-        public int id { get; set; }
-        public string ror_id { get; set; }
-        public string exidtype { get; set; }
-        public string value { get; set; }
-        public bool preferred { get; set; }
-
-        public exid_in_db(int _n, string _ror_id, string _exidtype, string _value, bool _preferred)
-        {
-            id = _n;
-            ror_id = _ror_id;
-            exidtype = _exidtype;
-            value = _value;
-            preferred = _preferred;
-        }
-    }
 }

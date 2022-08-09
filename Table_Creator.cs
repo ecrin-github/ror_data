@@ -16,7 +16,6 @@ namespace ror_data
         public void create_tables()
         {
             create_orgs();
-            create_org_extids();
             create_org_relationships();
             create_org_addresses();
             create_org_city_admins();
@@ -24,9 +23,7 @@ namespace ror_data
             create_org_acronyms();
             create_org_aliases();
             create_org_labels();
-            create_org_links();
             create_org_types();
-            create_org_ip_addresses(); 
         }
 
 
@@ -46,9 +43,9 @@ namespace ror_data
                     id                     INT
                   , ror_id                 VARCHAR
                   , language               VARCHAR
+                  , ror_name               VARCHAR
                   , name                   VARCHAR
-                  , name_stem              VARCHAR
-                  , bracketed_portion      VARCHAR
+                  , qualifier              VARCHAR
                   , status                 VARCHAR
                   , established            INT
                   , city_gn_id             INT
@@ -121,21 +118,6 @@ namespace ror_data
         }
 
 
-        private void create_org_links()
-        {
-            string sql_string = @"DROP TABLE IF EXISTS ror.org_links; 
-                 CREATE TABLE ror.org_links (
-                    id                     INT
-                  , seq_num                INT
-                  , ror_id                 VARCHAR
-                  , link                   VARCHAR
-                );
-                CREATE INDEX org_links_id ON ror.org_links(id);
-                CREATE INDEX org_links_ror_id ON ror.org_links(ror_id);";
-            execute_sql(sql_string);
-        }
-
-
         private void create_org_types()
         {
             string sql_string = @"DROP TABLE IF EXISTS ror.org_types; 
@@ -149,37 +131,7 @@ namespace ror_data
             execute_sql(sql_string);
         }
 
-
-        private void create_org_ip_addresses()
-        {
-            string sql_string = @"DROP TABLE IF EXISTS ror.org_ip_addresses; 
-                 CREATE TABLE ror.org_ip_addresses (
-                    id                     INT
-                  , ror_id                 VARCHAR
-                  , ip_address             VARCHAR
-                );
-                CREATE INDEX org_ip_addresses_id ON ror.org_ip_addresses(id);
-                CREATE INDEX org_ip_addresses_ror_id ON ror.org_ip_addresses(ror_id);";
-            execute_sql(sql_string);
-        }
-
-
-        private void create_org_extids()
-        {
-            string sql_string = @"DROP TABLE IF EXISTS ror.org_extids; 
-                 CREATE TABLE ror.org_extids (
-                    id                     INT
-                  , ror_id                 VARCHAR
-                  , exidtype               VARCHAR
-                  , value                  VARCHAR
-                  , preferred              BOOLEAN
-                );
-                CREATE INDEX org_extids_id ON ror.org_extids(id);
-                CREATE INDEX org_extids_ror_id ON ror.org_extids(ror_id);";
-            execute_sql(sql_string);
-        }
-
-
+        
         private void create_org_relationships()
         {
             string sql_string = @"DROP TABLE IF EXISTS ror.org_relationships; 

@@ -1,7 +1,7 @@
 # ror_data
 Downloads ROR dataset and loads to Postgres tables
 
-A 'quick and dirty' C# console program that takes the large json file published by ROR, deserialises it into organisation objects, and then splits the data in those objects into PostgreSQL tables. Tables are created for the organisations ('orgs', with id, name, year established, country etc.), and then organisation aliases, acronyms, addresses, GeoNames and NUTS location details, relationships, types, labels and external ids.
+A 'quick and dirty' C# console program that takes the large json file published by ROR, deserialises it into organisation objects, and then splits the data in those objects into PostgreSQL tables. Tables are created for the organisations ('orgs', with id, name, year established, country etc.), and then organisation aliases, acronyms, addresses, GeoNames and NUTS location details, relationships, types, and labels.
 
 **Dependencies:**<br/>
 The program is written in .net core. <br/>

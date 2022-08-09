@@ -74,16 +74,6 @@ namespace ror_data
         }
 
 
-        public ulong StoreLinks(PostgreSQLCopyHelper<link_in_db> copyHelper, IEnumerable<link_in_db> entities)
-        {
-            using (var conn = new NpgsqlConnection(connString))
-            {
-                conn.Open();
-                return copyHelper.SaveAll(conn, entities);
-            }
-        }
-
-
         public ulong StoreTypes(PostgreSQLCopyHelper<type_in_db> copyHelper, IEnumerable<type_in_db> entities)
         {
             using (var conn = new NpgsqlConnection(connString))
@@ -94,26 +84,6 @@ namespace ror_data
         }
 
         public ulong StoreLabels(PostgreSQLCopyHelper<label_in_db> copyHelper, IEnumerable<label_in_db> entities)
-        {
-            using (var conn = new NpgsqlConnection(connString))
-            {
-                conn.Open();
-                return copyHelper.SaveAll(conn, entities);
-            }
-        }
-
-
-        public ulong StoreExternalIds(PostgreSQLCopyHelper<exid_in_db> copyHelper, IEnumerable<exid_in_db> entities)
-        {
-            using (var conn = new NpgsqlConnection(connString))
-            {
-                conn.Open();
-                return copyHelper.SaveAll(conn, entities);
-            }
-        }
-
-
-        public ulong StoreIPAddresses(PostgreSQLCopyHelper<ip_address_in_db> copyHelper, IEnumerable<ip_address_in_db> entities)
         {
             using (var conn = new NpgsqlConnection(connString))
             {

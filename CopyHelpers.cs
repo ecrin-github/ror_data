@@ -22,24 +22,11 @@ namespace ror_data
                 .MapInteger("seq_num", x => x.seq_num)
                 .MapVarchar("acronym", x => x.acronym);
 
-        public PostgreSQLCopyHelper<link_in_db> link_helper =
-            new PostgreSQLCopyHelper<link_in_db>("ror", "org_links")
-                .MapInteger("id", x => x.id)
-                .MapVarchar("ror_id", x => x.ror_id)
-                .MapInteger("seq_num", x => x.seq_num)
-                .MapVarchar("link", x => x.link);
-
         public PostgreSQLCopyHelper<type_in_db> type_helper =
             new PostgreSQLCopyHelper<type_in_db>("ror", "org_types")
                 .MapInteger("id", x => x.id)
                 .MapVarchar("ror_id", x => x.ror_id)
                 .MapVarchar("orgtype", x => x.orgtype);
-
-        public PostgreSQLCopyHelper<ip_address_in_db> ip_address_helper =
-            new PostgreSQLCopyHelper<ip_address_in_db>("ror", "org_ip_addresses")
-                .MapInteger("id", x => x.id)
-                .MapVarchar("ror_id", x => x.ror_id)
-                .MapVarchar("ip_address", x => x.ip_address);
 
         public PostgreSQLCopyHelper<label_in_db> label_helper =
             new PostgreSQLCopyHelper<label_in_db>("ror", "org_labels")
@@ -48,14 +35,6 @@ namespace ror_data
                 .MapInteger("seq_num", x => x.seq_num)
                 .MapVarchar("language", x => x.language)
                 .MapVarchar("value", x => x.value);
-
-        public PostgreSQLCopyHelper<exid_in_db> extern_ids_helper =
-            new PostgreSQLCopyHelper<exid_in_db>("ror", "org_extids")
-                .MapInteger("id", x => x.id)
-                .MapVarchar("ror_id", x => x.ror_id)
-                .MapVarchar("exidtype", x => x.exidtype)
-                .MapVarchar("value", x => x.value)
-                .MapBoolean("preferred", x => x.preferred);
 
         public PostgreSQLCopyHelper<relationship_in_db> relationship_helper =
             new PostgreSQLCopyHelper<relationship_in_db>("ror", "org_relationships")

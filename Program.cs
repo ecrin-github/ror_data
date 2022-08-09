@@ -24,6 +24,10 @@ namespace ror_data
             // Establish copy helper functions, for transfer of data to db.
 
             OrgCopyHelpers ch = new OrgCopyHelpers();
+
+            // Establish helper instance, to access the helper fumctions
+
+            Helper h = new Helper();
             
             // Read in the json file, 
             // consists of an array of objects, each equivalent to the ror_org class.
@@ -51,7 +55,7 @@ namespace ror_data
                 ror_org_in_db org = new ror_org_in_db();
                 org.id = n;
                 org.ror_id = rorid;
-                org.name = ro.name;
+                org.ror_name = h.Clean(ro.name);
                 org.status = ro.status;
                 org.established = ro.established;
                 org.email_address = ro.email_address;
@@ -59,53 +63,79 @@ namespace ror_data
                 org.country_name = ro.country.country_name;
                 org.country_code = ro.country.country_code;
 
-                if (ro.name.Contains("(") && ro.name.EndsWith(")"))
+                if (org.ror_name.Contains("(") && org.ror_name.EndsWith(")"))
                 {
-                    int start_bracket_pos = ro.name.IndexOf("(");
-                    string bracketed = ro.name
-                        .Substring(start_bracket_pos + 1, ro.name.Length - start_bracket_pos - 2)
+                    int start_bracket_pos = org.ror_name.IndexOf("(");
+
+                    // bracketed is any bracketed text, minus the brackets
+
+                    string qual = org.ror_name
+                        .Substring(start_bracket_pos + 1, org.ror_name.Length - start_bracket_pos - 2)
                         .Trim().ToLower();
 
-                    // ignore some non-country bracketed text
-                    if (bracketed != "ascr" && bracketed != "company"
-                        && bracketed != "duluth" && bracketed != "epa"
-                        && bracketed != "engrs." && bracketed != "Rybářství Litomyšl")
+                    // for a few non-country bracketed text - drop the bracket
+                    // we just want the country suffiixes (mainly for companies) 
+
+                    if (qual == "rybářství litomyšl" || qual == "qgenomics"
+                        || qual == "ascr" || qual == "iris"
+                        || qual == "duluth" || qual == "epa"
+                        || qual == "engrs." || qual == "bicc"
+                        || qual == "fbn" || qual == "group"
+                        || qual == "gwzo")
+                    {
+                        org.ror_name = org.ror_name.Substring(0, start_bracket_pos -1 ).Trim();
+                        org.name = org.ror_name;
+                    }
+                    else
                     {
                         // do some corrections along the way
 
-                        if (bracketed == "brasil") { bracketed = "brazil"; }
-                        if (bracketed == "czech republic") { bracketed = "czechia"; }
-                        if (bracketed == "luxemburg") { bracketed = "luxembourg"; }
-                        if (bracketed == "south korean") { bracketed = "south korea"; }
-                        if (bracketed == "uk") { bracketed = "united kingdom"; }
-                        if (bracketed == "united kindgom") { bracketed = "united kingdom"; }
-                        if (bracketed == "usa") { bracketed = "united states"; }
-                        if (bracketed == "unitedstates") { bracketed = "united states"; }
-                        if (bracketed == "hongkong") { bracketed = "hong kong"; }
-                        if (bracketed == "berlin") { bracketed = "germany"; }
-                        if (bracketed.Contains("sweden"))
+                        if (qual == "brasil") { qual = "brazil"; }
+                        if (qual == "czech republic") { qual = "czechia"; }
+                        if (qual == "luxemburg") { qual = "luxembourg"; }
+                        if (qual == "south korean") { qual = "south korea"; }
+                        if (qual == "uk") { qual = "united kingdom"; }
+                        if (qual == "united kindgom") { qual = "united kingdom"; }
+                        if (qual == "usa") { qual = "united states"; }
+                        if (qual == "unitedstates") { qual = "united states"; }
+                        if (qual == "hong kong") { qual = "china"; }
+                        if (qual == "hongkong") { qual = "china"; }
+                        if (qual == "berlin") { qual = "germany"; }
+                        if (qual == "macedonia") { qual = "north macedonia"; }
+                        if (qual == "cape verde") { qual = "cabo verde"; }
+                        if (qual.Contains("bosnia")) { qual = "bosnia and herzegovina"; }
+                        if (qual.Contains("sweden"))
                         {
                             // lose some spurious (not visible in utf-8) characters
-                            bracketed = "sweden";
+                            qual = "sweden";
                         }
 
-                        bracketed = Capitalise(bracketed);
+                        qual = h.Capitalise(qual);
 
-                        // may be 2 sets of brackets in the name...
+                        // may be 2 sets of brackets in the name... if this is the case
+                        // the name stem includes the first bracketed portion and the
+                        // bracketed_portion is the contents of the second set of brackets
 
-                        if (bracketed.Contains(")") && bracketed.Contains("("))
+                        if (qual.Contains(")") && qual.Contains("("))
                         {
-                            org.name_stem = ro.name.Substring(0, start_bracket_pos + 1) + Capitalise(bracketed.Substring(0, bracketed.IndexOf(")") + 1));
-                            org.bracketed_portion = Capitalise(bracketed.Substring(bracketed.IndexOf("(") + 1));
+                            // N.B brackets will be in that order -
+                            // 'AAA (bbbb)(ccc)' has becomne 'AAA' and 'bbb) (ccc'
+                            // needs to be 'AAA (bbb)' and 'ccc'
+
+                            org.name = org.ror_name.Substring(0, start_bracket_pos + 1) + h.Capitalise(qual.Substring(0, qual.IndexOf(")") + 1));
+                            org.qualifier = h.Capitalise(qual.Substring(qual.IndexOf("(") + 1));
                         }
                         else
                         {
-                            org.name_stem = ro.name.Substring(0, start_bracket_pos - 1);
-                            org.bracketed_portion = bracketed;
+                            org.name = org.ror_name.Substring(0, start_bracket_pos - 1);
+                            org.qualifier = qual;
                         }
                     }
                 }
-
+                else
+                {
+                    org.name = org.ror_name;
+                }
 
                 // Types
                 if (ro.types != null && ro.types.Length > 0)
@@ -139,8 +169,12 @@ namespace ror_data
                     int seq_num = 0;
                     foreach(string s in ro.aliases)
                     {
-                        seq_num++;
-                        aliases.Add(new alias_in_db(n, rorid, seq_num, s));
+                        string t = h.Clean(s);
+                        if (t != "")
+                        {
+                            seq_num++;
+                            aliases.Add(new alias_in_db(n, rorid, seq_num, t));
+                        }
                     }
 
                     db_layer.StoreAliases(ch.alias_helper, aliases);
@@ -154,26 +188,15 @@ namespace ror_data
                     int seq_num = 0;
                     foreach (string s in ro.acronyms)
                     {
-                        seq_num++;
-                        acronyms.Add(new acronym_in_db(n, rorid, seq_num, s));
+                        string t = h.Clean(s);
+                        if (t != "")
+                        {
+                            seq_num++;
+                            acronyms.Add(new acronym_in_db(n, rorid, seq_num, t));
+                        }
                     }
 
                     db_layer.StoreAcronyms(ch.acronym_helper, acronyms);
-                }
-
-
-                // Links
-                if (ro.links != null && ro.links.Length > 0)
-                {
-                    List<link_in_db> links = new List<link_in_db>();
-                    int seq_num = 0;
-                    foreach (string s in ro.links)
-                    {
-                        seq_num++;
-                        links.Add(new link_in_db(n, rorid, seq_num, s));
-                    }
-
-                    db_layer.StoreLinks(ch.link_helper, links);
                 }
 
 
@@ -184,27 +207,18 @@ namespace ror_data
                     int seq_num = 0;
                     foreach (label_object lob in ro.labels)
                     {
-                        seq_num++;
-                        labels.Add(new label_in_db(n, rorid, seq_num, lob.iso639, lob.label)); 
+                        string t = h.Clean(lob.label);
+                        if (t != "")
+                        {
+                            seq_num++;
+                            labels.Add(new label_in_db(n, rorid, seq_num, lob.iso639, t));
+                        }
                     }
 
                     db_layer.StoreLabels(ch.label_helper, labels);
                 }
 
-
-                // IP addresses
-                if (ro.ip_addresses != null && ro.ip_addresses.Length > 0)
-                {
-                    List<ip_address_in_db> ip_addresses = new List<ip_address_in_db>();
-                    foreach (string s in ro.ip_addresses)
-                    {
-                        ip_addresses.Add(new ip_address_in_db(n, rorid, s));
-                    }
-
-                    db_layer.StoreIPAddresses(ch.ip_address_helper, ip_addresses);
-                }
-                             
-
+ 
                 // Relationships
                 if (ro.relationships != null && ro.relationships.Length > 0)
                 {
@@ -308,7 +322,6 @@ namespace ror_data
                         }
 
                         addresses.Add(adb);
-
                     }
 
                     if (addresses.Count > 0)
@@ -327,252 +340,10 @@ namespace ror_data
                     }
                 }
 
-
                 // now org object can be stored in database
                 db_layer.StoreOrg(org);
-
-
-                //External Ids
-                if (ro.external_ids != null)
-                {
-                    external_ids exids = ro.external_ids;
-                    List<exid_in_db> all_exids = new List<exid_in_db>();
-
-                    if (exids.FundRef != null) {
-
-                        List<exid_in_db> exids_in_db = new List<exid_in_db>();
-
-                        if (exids.FundRef.all != null && exids.FundRef.all.Length > 0) {
-                            foreach (string s in exids.FundRef.all)
-                            {
-                                exids_in_db.Add(new exid_in_db(n, rorid, "FundRef", s, false));
-                            }
-                        }
-
-                        if (exids.FundRef.preferred != null && exids.FundRef.preferred != "null") {
-                            foreach (exid_in_db exdb in exids_in_db)
-                            {
-                                if (exdb.value == exids.FundRef.preferred) {
-                                    exdb.preferred = true;
-                                    break;
-                                }
-                            }
-                        }
-
-                        all_exids.AddRange(exids_in_db);
-                    }
-                    
-
-                    if (exids.OrgRef != null) {
-
-                        List<exid_in_db> exids_in_db = new List<exid_in_db>();
-
-                        if (exids.OrgRef.all != null && exids.OrgRef.all.Length > 0) {
-                            foreach (string s in exids.OrgRef.all)
-                            {
-                                exids_in_db.Add(new exid_in_db(n, rorid, "OrgRef", s, false));
-                            }
-                        }
-
-                        if (exids.OrgRef.preferred != null && exids.OrgRef.preferred != "null") {
-                            foreach (exid_in_db exdb in exids_in_db)
-                            {
-                                if (exdb.value == exids.OrgRef.preferred) {
-                                    exdb.preferred = true;
-                                    break;
-                                }
-                            }
-                        }
-
-                        all_exids.AddRange(exids_in_db);
-                    }
-
-
-                    if (exids.ISNI != null) {
-
-                        List<exid_in_db> exids_in_db = new List<exid_in_db>();
-
-                        if (exids.ISNI.all != null && exids.ISNI.all.Length > 0) {
-                            foreach (string s in exids.ISNI.all)
-                            {
-                                exids_in_db.Add(new exid_in_db(n, rorid, "ISNI", s, false));
-                            }
-                        }
-
-                        if (exids.ISNI.preferred != null && exids.ISNI.preferred != "null") {
-                            foreach (exid_in_db exdb in exids_in_db)
-                            {
-                                if (exdb.value == exids.ISNI.preferred) {
-                                    exdb.preferred = true;
-                                    break;
-                                }
-                            }
-                        }
-
-                        all_exids.AddRange(exids_in_db);
-                    }
-
-                      
-                    if (exids.GRID != null) {
-
-                        List<exid_in_db> exids_in_db = new List<exid_in_db>();
-
-                        if (exids.GRID.all != null) {
-                            exids_in_db.Add(new exid_in_db(n, rorid, "GRID", exids.GRID.all, false));
-                        }
-
-                        if (exids.GRID.preferred != null && exids.GRID.preferred != "null") {
-                            foreach (exid_in_db exdb in exids_in_db)
-                            {
-                                if (exdb.value == exids.GRID.preferred) {
-                                    exdb.preferred = true;
-                                    break;
-                                }
-                            }
-                        }
-
-                        all_exids.AddRange(exids_in_db);
-                    }
-
-
-                    if (exids.Wikidata != null) {
-
-                        List<exid_in_db> exids_in_db = new List<exid_in_db>();
-
-                        if (exids.Wikidata.all != null && exids.Wikidata.all.Length > 0) {
-                            foreach (string s in exids.Wikidata.all)
-                            {
-                                exids_in_db.Add(new exid_in_db(n, rorid, "Wikidata", s, false));
-                            }
-                        }
-
-                        if (exids.Wikidata.preferred != null && exids.Wikidata.preferred != "null") {
-                            foreach (exid_in_db exdb in exids_in_db)
-                            {
-                                if (exdb.value == exids.Wikidata.preferred) {
-                                    exdb.preferred = true;
-                                    break;
-                                }
-                            }
-                        }
-
-                        all_exids.AddRange(exids_in_db);
-                    }
-
-
-                    if (exids.UCAS != null) {
-
-                        List<exid_in_db> exids_in_db = new List<exid_in_db>();
-
-                        if (exids.UCAS.all != null && exids.UCAS.all.Length > 0) {
-                            foreach (string s in exids.UCAS.all)
-                            {
-                                exids_in_db.Add(new exid_in_db(n, rorid, "UCAS", s, false));
-                            }
-                        }
-
-                        if (exids.UCAS.preferred != null && exids.UCAS.preferred != "null") {
-                            foreach (exid_in_db exdb in exids_in_db)
-                            {
-                                if (exdb.value == exids.UCAS.preferred) {
-                                    exdb.preferred = true;
-                                    break;
-                                }
-                            }
-                        }
-
-                        all_exids.AddRange(exids_in_db);
-                    }
-
-
-                    if (exids.HESA != null) {
-
-                        List<exid_in_db> exids_in_db = new List<exid_in_db>();
-
-                        if (exids.HESA.all != null && exids.HESA.all.Length > 0) {
-                            foreach (string s in exids.HESA.all)
-                            {
-                                exids_in_db.Add(new exid_in_db(n, rorid, "HESA", s, false));
-                            }
-                        }
-
-                        if (exids.HESA.preferred != null && exids.HESA.preferred != "null") {
-                            foreach (exid_in_db exdb in exids_in_db)
-                            {
-                                if (exdb.value == exids.HESA.preferred) {
-                                    exdb.preferred = true;
-                                    break;
-                                }
-                            }
-                        }
-
-                        all_exids.AddRange(exids_in_db);
-                    }
-
-
-                    if (exids.UKPRN != null) {
-
-                        List<exid_in_db> exids_in_db = new List<exid_in_db>();
-
-                        if (exids.UKPRN.all != null && exids.UKPRN.all.Length > 0) {
-                            foreach (string s in exids.UKPRN.all)
-                            {
-                                exids_in_db.Add(new exid_in_db(n, rorid, "UKPRN", s, false));
-                            }
-                        }
-
-                        if (exids.UKPRN.preferred != null && exids.UKPRN.preferred != "null") {
-                            foreach (exid_in_db exdb in exids_in_db)
-                            {
-                                if (exdb.value == exids.UKPRN.preferred) {
-                                    exdb.preferred = true;
-                                    break;
-                                }
-                            }
-                        }
-
-                        all_exids.AddRange(exids_in_db);
-                    }
-
-
-                    db_layer.StoreExternalIds(ch.extern_ids_helper, all_exids);
-
-                }
+              
             }
-        }
-
-
-        private static string Capitalise(string s)
-        {
-            string capped_s = "", new_s = "";
-            
-            if (s.Length < 4)
-            {
-                capped_s = s.ToUpper();
-            }
-            else if (s.Contains(" "))
-            {
-                string[] words = s.Split(" ");
-                foreach (string w in words)
-                {
-                    new_s += " " + w[0].ToString().ToUpper() + w.Substring(1);
-                }
-                capped_s = new_s.Substring(1);
-            }
-            else if (s.Contains("-"))
-            {
-                string[] words = s.Split("-");
-                foreach (string w in words)
-                {
-                    new_s += "-" + w[0].ToString().ToUpper() + w.Substring(1);
-                }
-                capped_s = new_s.Substring(1);
-            }
-            else
-            {
-                capped_s = s[0].ToString().ToUpper() + s.Substring(1);
-            }
-            return capped_s;
         }
     }
 }
